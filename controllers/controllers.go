@@ -52,3 +52,23 @@ func (DepositController) SyncDeposits(c echo.Context) error {
 
     return c.JSON(http.StatusOK, map[string]string{"message": "Deposits synced successfully"})
 }
+
+
+func (DepositController) CheckDepositByTxID(c echo.Context) error {
+	txID := c.Param("tx_id")
+	if txID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "tx_id is required"})
+	}
+
+	var deposit models.Deposit
+	if err := store.Db.Where("tx_id = ?", txID).First(&deposit).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Deposit not found"})
+	}
+
+	response := map[string]interface{}{
+		"coin":   deposit.Coin,
+		"amount": deposit.Amount,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
