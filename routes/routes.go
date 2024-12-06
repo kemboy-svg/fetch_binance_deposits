@@ -13,6 +13,8 @@ func Routes(e *echo.Echo) {
 
 	e.GET("/Deposits/", user.SyncDeposits)
 	e.GET("/getDepositDetails/:tx_id",user.CheckDepositByTxID)
+	e.GET("/AllDeposits/",user.GetAllDeposits)
+
 	
 	
 

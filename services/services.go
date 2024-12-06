@@ -4,10 +4,13 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -76,4 +79,40 @@ func generateHMACSHA256(secret, data string) string {
     h := hmac.New(sha256.New, []byte(secret))
     h.Write([]byte(data))
     return hex.EncodeToString(h.Sum(nil))
+}
+
+
+func ConvertToUSD(coin, amountStr string) (float64, error) {
+    const binanceAPIURL = "https://api.binance.com/api/v3/ticker/price"
+
+    // Fetch the coin's price in USD from Binance
+    resp, err := http.Get(fmt.Sprintf("%s?symbol=%sUSDT", binanceAPIURL, strings.ToUpper(coin)))
+    if err != nil {
+        return 0, fmt.Errorf("failed to fetch price for %s: %w", coin, err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return 0, fmt.Errorf("received non-200 response: %s", resp.Status)
+    }
+
+    var result struct {
+        Price string `json:"price"`
+    }
+    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+        return 0, fmt.Errorf("failed to decode price response: %w", err)
+    }
+
+    // Parse the price and amount
+    price, err := strconv.ParseFloat(result.Price, 64)
+    if err != nil {
+        return 0, fmt.Errorf("invalid price format: %w", err)
+    }
+    amount, err := strconv.ParseFloat(amountStr, 64)
+    if err != nil {
+        return 0, fmt.Errorf("invalid amount format: %w", err)
+    }
+
+    // Convert amount to USD
+    return amount * price, nil
 }
