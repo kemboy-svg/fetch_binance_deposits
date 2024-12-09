@@ -20,19 +20,15 @@ func FetchDeposits(apiKey, secret string) ([]byte, error) {
     endpoint := "/sapi/v1/capital/deposit/hisrec"
     timestamp := getCurrentTimestamp()
 
-    // Prepare query string
     queryString := fmt.Sprintf("timestamp=%d", timestamp)
 
     // Generate signature
     signature := generateHMACSHA256(secret, queryString)
 
-    // Append signature to query string
     fullURL := fmt.Sprintf("%s%s?%s&signature=%s", baseURL, endpoint, queryString, signature)
 
-    // Log the full URL for debugging
     log.Printf("Request URL: %s", fullURL)
 
-    // Create request
     req, err := http.NewRequest("GET", fullURL, nil)
     if err != nil {
         log.Printf("Error creating request: %v", err)
@@ -41,7 +37,6 @@ func FetchDeposits(apiKey, secret string) ([]byte, error) {
 
     req.Header.Set("X-MBX-APIKEY", apiKey)
 
-    // Send request
     client := &http.Client{}
     resp, err := client.Do(req)
     if err != nil {
@@ -50,7 +45,6 @@ func FetchDeposits(apiKey, secret string) ([]byte, error) {
     }
     defer resp.Body.Close()
 
-    // Log the response status
     log.Printf("Response Status: %s", resp.Status)
 
     if resp.StatusCode != http.StatusOK {
@@ -59,14 +53,12 @@ func FetchDeposits(apiKey, secret string) ([]byte, error) {
         return nil, fmt.Errorf("failed to fetch deposits: HTTP %d - %s", resp.StatusCode, string(body))
     }
 
-    // Read response body
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
         log.Printf("Error reading response body: %v", err)
         return nil, err
     }
 
-    // Log success
     log.Println("Deposits fetched successfully.")
     return body, nil
 }
@@ -103,7 +95,6 @@ func ConvertToUSD(coin, amountStr string) (float64, error) {
         return 0, fmt.Errorf("failed to decode price response: %w", err)
     }
 
-    // Parse the price and amount
     price, err := strconv.ParseFloat(result.Price, 64)
     if err != nil {
         return 0, fmt.Errorf("invalid price format: %w", err)
@@ -113,6 +104,5 @@ func ConvertToUSD(coin, amountStr string) (float64, error) {
         return 0, fmt.Errorf("invalid amount format: %w", err)
     }
 
-    // Convert amount to USD
     return amount * price, nil
 }

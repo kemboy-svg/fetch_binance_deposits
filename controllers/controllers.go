@@ -24,10 +24,8 @@ func (DepositController) SyncDeposits(c echo.Context) error {
         return helpers.JSONResponse(c, http.StatusInternalServerError, false, "API keys not configured", nil)
     }
 
-    // Fetch deposits from Binance API
     data, err := services.FetchDeposits(apiKey, secret)
     if err != nil {
-        // Use server error message if available
         return helpers.JSONResponse(c, http.StatusInternalServerError, false, "Failed to fetch deposits: "+err.Error(), nil)
     }
 
@@ -41,7 +39,6 @@ func (DepositController) SyncDeposits(c echo.Context) error {
 
     var syncedDeposits []models.Deposit
     for _, deposit := range deposits {
-        // Check if the deposit already exists
         var existing models.Deposit
         if err := store.Db.Where("tx_id = ?", deposit.TxID).First(&existing).Error; err == nil {
             continue // Skip if it already exists
@@ -55,16 +52,14 @@ func (DepositController) SyncDeposits(c echo.Context) error {
         }
         deposit.Amount = fmt.Sprintf("%.2f", usdAmount) // Save the USD amount as a string
 
-        // Save the new deposit
         if err := store.Db.Create(&deposit).Error; err != nil {
             return helpers.JSONResponse(c, http.StatusInternalServerError, false, "Failed to save deposit: "+err.Error(), nil)
         }
 
-        // Add to synced deposits
+        // Add to synced deposits to my local DB
         syncedDeposits = append(syncedDeposits, deposit)
     }
 
-    // Return the response with synced deposits
     return helpers.JSONResponse(c, http.StatusOK, true, "Data fetched successfully", syncedDeposits)
 }
 
@@ -90,15 +85,12 @@ func (DepositController) CheckDepositByTxID(c echo.Context) error {
 
 
 func (DepositController) GetAllDeposits(c echo.Context) error {
-	// Declare a slice to hold the deposits
 	var deposits []models.Deposit
 
-	// Fetch all deposits from the database
 	if err := store.Db.Find(&deposits).Error; err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, false, "Failed to fetch deposits", nil)
 	}
 
-	// Return the deposits
 	return helpers.JSONResponse(c, http.StatusOK, true, "Deposits fetched successfully", deposits)
 }
 

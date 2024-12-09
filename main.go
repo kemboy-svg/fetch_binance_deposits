@@ -27,7 +27,6 @@ func init() {
 	}
 	st := store.Store{}
 	st.MigrateAllModels()
-	// controllers.DeploymentFunctions(
 }
 
 func main() {
@@ -108,7 +107,7 @@ func main() {
 			}
 			return opts
 		},
-	})) // adds middleware to gather metrics
+	})) 
 	e.GET("/metrics_prometheus", echoprometheus.NewHandler())
 
 	e.Logger.Fatal(e.Start(":" + port))
